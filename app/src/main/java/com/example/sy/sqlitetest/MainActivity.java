@@ -1,18 +1,21 @@
 package com.example.sy.sqlitetest;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     MyDBHelper myHelper;
     Button btnInit, btnInsert,btnSelect;
-    EditText editName, editNumder, editNameResult, editNumberResult;
+    EditText editName, editNumber, editNameResult, editNumberResult;
     SQLiteDatabase sqldb;
 
     @Override
@@ -20,17 +23,58 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle("아이돌 그룹 관리 DB");
-
+        myHelper = new MyDBHelper(this);
         btnInit = findViewById(R.id.btnInit);
         btnInsert = findViewById(R.id.btnInsert);
         btnSelect = findViewById(R.id.btnSelect);
 
         editName = findViewById(R.id.edit_name);
-        editNumder =findViewById(R.id.edtNumber);
+        editNumber =findViewById(R.id.edit_count);
         editNameResult = findViewById(R.id.edit_name_result);
         editNumberResult = findViewById(R.id.edit_number_result);
 
- 
+        sqldb =myHelper.getWritableDatabase();
+        myHelper.onUpgrade(sqldb,1,2);
+        sqldb.close();
+
+        btnInsert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sqldb =myHelper.getWritableDatabase();
+                sqldb.execSQL("INSERT INTO groupTBL values('" +
+                                editName.getText().toString() + "', "+
+                                editNumber.getText().toString() + ");");
+
+                sqldb.close();
+                Toast.makeText(getApplicationContext(),"입력됨",Toast.LENGTH_SHORT).show();
+                editNumber.setText("");
+                editName.setText("");
+            }
+        });
+
+        btnSelect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sqldb = myHelper.getWritableDatabase();
+                Cursor cursor;
+                cursor = sqldb.rawQuery("select * from groupTBL;", null);
+
+                String strNames = "그룹 이름" + "\r\n" + "--------" + "\r\n";
+                String strNumbers = "인원" +  "\r\n" + "--------" + "\r\n";
+
+                while(cursor.moveToNext()){
+                    strNames += cursor.getString(0)+ "\r\n";
+                    strNumbers += cursor.getString(1) + "\r\n";
+                }
+
+                editNameResult.setText(strNames);
+                editNumberResult.setText(strNumbers);
+
+                cursor.close();
+                sqldb.close();
+            }
+        });
+
 
 
     }
