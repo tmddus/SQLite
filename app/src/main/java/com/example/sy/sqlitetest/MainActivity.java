@@ -37,44 +37,40 @@ public class MainActivity extends AppCompatActivity {
         myHelper.onUpgrade(sqldb,1,2);
         sqldb.close();
 
+
+        btnInit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sqldb=myHelper.getWritableDatabase();
+                myHelper.onUpgrade(sqldb, 1, 2);
+                sqldb.close();
+            }
+        });
+
         btnInsert.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sqldb =myHelper.getWritableDatabase();
-                sqldb.execSQL("INSERT INTO groupTBL values('" +
-                                editName.getText().toString() + "', "+
-                                editNumber.getText().toString() + ");");
 
-                sqldb.close();
-                Toast.makeText(getApplicationContext(),"입력됨",Toast.LENGTH_SHORT).show();
-                editNumber.setText("");
-                editName.setText("");
+                if(editName.length() != 0 && editNumber.length() != 0) {
+                    sqldb = myHelper.getWritableDatabase();
+                    sqldb.execSQL("INSERT INTO groupTBL values('" +
+                            editName.getText().toString() + "', " +
+                            editNumber.getText().toString() + ");");
+                    sqldb.close();
+                    refresh();
+                    Toast.makeText(getApplicationContext(), "입력됨", Toast.LENGTH_SHORT).show();
+                    editNumber.setText("");
+                    editName.setText("");
+                }else Toast.makeText(getApplicationContext(), "내용을 입력해주세요", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnSelect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sqldb = myHelper.getWritableDatabase();
-                Cursor cursor;
-                cursor = sqldb.rawQuery("select * from groupTBL;", null);
-
-                String strNames = "그룹 이름" + "\r\n" + "--------" + "\r\n";
-                String strNumbers = "인원" +  "\r\n" + "--------" + "\r\n";
-
-                while(cursor.moveToNext()){
-                    strNames += cursor.getString(0)+ "\r\n";
-                    strNumbers += cursor.getString(1) + "\r\n";
-                }
-
-                editNameResult.setText(strNames);
-                editNumberResult.setText(strNumbers);
-
-                cursor.close();
-                sqldb.close();
+                refresh();
             }
         });
-
 
 
     }
@@ -97,5 +93,25 @@ public class MainActivity extends AppCompatActivity {
             db.execSQL("DROP TABLE IF EXISTS groupTBL");
             onCreate(db);
         }
+    }
+
+    void refresh(){
+        sqldb = myHelper.getWritableDatabase();
+        Cursor cursor;
+        cursor = sqldb.rawQuery("select * from groupTBL;", null);
+
+        String strNames = "그룹 이름" + "\r\n" + "--------" + "\r\n";
+        String strNumbers = "인원" +  "\r\n" + "--------" + "\r\n";
+
+        while(cursor.moveToNext()){
+            strNames += cursor.getString(0)+ "\r\n";
+            strNumbers += cursor.getString(1) + "\r\n";
+        }
+
+        editNameResult.setText(strNames);
+        editNumberResult.setText(strNumbers);
+
+        cursor.close();
+        sqldb.close();
     }
 }
